@@ -11,21 +11,17 @@ import lombok.RequiredArgsConstructor;
 @Data
 @Entity
 @RequiredArgsConstructor
-@Table(name = "USER", schema = "exchange")
-public class User {
+@Table(name = "CURRENCY", schema = "exchange")
+public class Currency {
 
     @Id
     @GeneratedValue
     private Long id;
 
+    @Column(nullable = false)
+    private String name;
+
     @Column(nullable = false, unique = true)
-    private String email;
-
-    @Column(nullable = false)
-    private String fullName;
-
-    @Column(nullable = false)
-    private String password;
-    private String profileImageUrl;
+    private String code;
 
 }
