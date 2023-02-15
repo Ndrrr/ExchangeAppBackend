@@ -6,10 +6,10 @@ import lombok.Data;
 @Data
 public class LoginRequest {
 
-    @NotBlank()
+    @NotBlank
     private String email;
 
-    @NotBlank()
+    @NotBlank
     private String password;
 
 }

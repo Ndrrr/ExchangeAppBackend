@@ -1,6 +1,7 @@
 package com.exchange.app.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +31,7 @@ public class JwtGenerator {
                 .setExpiration(expireDate)
                 .signWith(SignatureAlgorithm.HS512, JWT_SECRET)
                 .compact();
+
         return token;
     }
 
@@ -38,6 +40,7 @@ public class JwtGenerator {
                 .setSigningKey(JWT_SECRET)
                 .parseClaimsJws(token)
                 .getBody();
+
         return claims.getSubject();
     }
 
@@ -45,7 +48,7 @@ public class JwtGenerator {
         try {
             Jwts.parser().setSigningKey(JWT_SECRET).parseClaimsJws(token);
             return true;
-        } catch (Exception ex) {
+        } catch (JwtException ex) {
             throw new AuthenticationCredentialsNotFoundException("JWT was expired or incorrect");
         }
     }
