@@ -1,0 +1,18 @@
+logging:
+  level:
+    root: debug
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:54322/exchange
+    username: exchange
+    password: exchange
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+jwt:
+  secret: c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0Cg====
+  expiration: 7200000

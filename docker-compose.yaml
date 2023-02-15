@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  exchange_db:
+    container_name: exchange_db
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: exchange
+      POSTGRES_PASSWORD: exchange
+    volumes:
+      - .dbdata:/var/lib/postgresql/data
+    ports:
+      - 54322:5432
