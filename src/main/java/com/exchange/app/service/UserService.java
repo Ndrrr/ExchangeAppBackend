@@ -2,16 +2,23 @@ package com.exchange.app.service;
 
 import com.exchange.app.domain.User;
 import com.exchange.app.dto.UserDto;
+import com.exchange.app.dto.request.ForgotPasswordRequest;
 import com.exchange.app.dto.request.LoginRequest;
 import com.exchange.app.dto.request.RegisterRequest;
+import com.exchange.app.dto.request.ResetPasswordRequest;
 import com.exchange.app.dto.response.LoginResponse;
 import com.exchange.app.error.BaseException;
 import com.exchange.app.error.ErrorCode;
 import com.exchange.app.error.UserNotFoundException;
 import com.exchange.app.mapper.UserMapper;
 import com.exchange.app.repository.UserRepository;
-import com.exchange.app.security.JwtGenerator;
+import com.exchange.app.util.JwtUtil;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.env.Environment;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,9 +33,11 @@ import java.util.Optional;
 public class UserService {
 
     private final UserMapper userMapper;
-    private final JwtGenerator jwtGenerator;
+    private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
+    private final JavaMailSender javaMailSender;
+    private final Environment env;
 
     public void register(RegisterRequest registerRequest) {
         userRepository.save(userMapper.toUser(registerRequest));
@@ -45,8 +54,31 @@ public class UserService {
             throw BaseException.of(ErrorCode.INVALID_CREDENTIALS, "Incorrect email or password");
         }
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String token = jwtGenerator.generateToken(authentication);
+        String token = jwtUtil.generateToken(authentication.getName());
         return LoginResponse.of(token);
+    }
+
+    public void forgotPassword(ForgotPasswordRequest request) {
+        MimeMessage message = javaMailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message);
+        String email = request.getEmail();
+        try {
+            helper.setFrom(env.getProperty("spring.mail.username"));
+            helper.setSubject("Password reset");
+            helper.setTo(email);
+            helper.setText(generatePasswordResetLink(email));
+            javaMailSender.send(message);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            throw BaseException.of(ErrorCode.EMAIL_SENDING_ERROR, "Error while sending email");
+        }
+    }
+
+    public void updatePassword(String token, ResetPasswordRequest request) {
+        String email = jwtUtil.getUsernameFromJWT(token);
+        User user = userRepository.findByEmail(email).get();
+        user.setPassword(userMapper.encodePassword(request.getPassword()));
+        userRepository.save(user);
     }
 
     public UserDto getUserByEmail(String email) {
@@ -54,6 +86,17 @@ public class UserService {
         return user.map(userMapper::toUserDto)
                 .orElseThrow(() ->
                         UserNotFoundException.of(ErrorCode.USER_NOT_FOUND, "User not found"));
+    }
+
+    private String generatePasswordResetLink(String email) {
+        // #TODO create whitelist for password reset tokens
+        return "Dear user,\n\nPlease click the following link to reset your password." +
+                String.format("\nhttp://%s:%s/api/auth/reset-password?%s",
+                        env.getProperty("server.host"),
+                        env.getProperty("server.port"),
+                        jwtUtil.generateToken(email)) +
+                "\nIf you did not request this, please ignore this email." +
+                "Sincerely,\n\nExchangeApp Team.";
     }
 
 }

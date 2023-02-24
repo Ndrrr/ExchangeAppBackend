@@ -1,7 +1,6 @@
-package com.exchange.app.filter;
+package com.exchange.app.security;
 
-import com.exchange.app.security.CustomUserDetailsService;
-import com.exchange.app.security.JwtGenerator;
+import com.exchange.app.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +20,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
-    private final JwtGenerator tokenGenerator;
+    private final JwtUtil jwtUtil;
     private final CustomUserDetailsService customUserDetailsService;
 
     @Override
@@ -30,8 +29,8 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         String token = getJWTFromRequest(request);
 
-        if (StringUtils.hasText(token) && tokenGenerator.validateToken(token)) {
-            String username = tokenGenerator.getUsernameFromJWT(token);
+        if (StringUtils.hasText(token) && jwtUtil.validateToken(token)) {
+            String username = jwtUtil.getUsernameFromJWT(token);
             UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
 
             UsernamePasswordAuthenticationToken authenticationToken =
@@ -47,11 +46,8 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     private String getJWTFromRequest(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
-        }
-        return null;
+        String header = request.getHeader("Authorization");
+        return jwtUtil.getJwtFromHeader(header);
     }
 
 }

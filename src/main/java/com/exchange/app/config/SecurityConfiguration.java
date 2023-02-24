@@ -1,6 +1,6 @@
 package com.exchange.app.config;
 
-import com.exchange.app.filter.JwtFilter;
+import com.exchange.app.security.JwtFilter;
 import com.exchange.app.security.JwtAuthEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
