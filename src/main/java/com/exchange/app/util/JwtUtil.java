@@ -4,20 +4,22 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
 @Component
+@RequiredArgsConstructor
 public class JwtUtil {
-
-    @Value("${jwt.expiration}")
-    private long jwtExpiration;
 
     @Value("${jwt.secret}")
     private String jwtSecret;
+
+    private final Environment env;
 
     public String generateToken(String username, long expiration) {
         Date currentDate = new Date();
@@ -34,7 +36,7 @@ public class JwtUtil {
     }
 
     public String generateToken(String username) {
-        return generateToken(username, jwtExpiration);
+        return generateToken(username, env.getProperty("jwt.expiration.default", Long.class));
     }
 
     public String getUsernameFromJWT(String token) {

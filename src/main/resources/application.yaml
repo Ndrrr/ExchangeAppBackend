@@ -27,8 +27,10 @@ spring:
 
 jwt:
   secret: c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0Cg====
-  expiration: 7200000
+  expiration:
+    reset-password: 600000
+    default: 7200000
 
-server:
+front:
   host: localhost
-  port: 8080
+  port: 3000

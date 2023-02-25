@@ -75,6 +75,9 @@ public class UserService {
     }
 
     public void updatePassword(String token, ResetPasswordRequest request) {
+        if (!jwtUtil.validateToken(token)) {
+            throw BaseException.of(ErrorCode.INVALID_TOKEN, "Invalid token");
+        }
         String email = jwtUtil.getUsernameFromJWT(token);
         User user = userRepository.findByEmail(email).get();
         user.setPassword(userMapper.encodePassword(request.getPassword()));
@@ -91,10 +94,13 @@ public class UserService {
     private String generatePasswordResetLink(String email) {
         // #TODO create whitelist for password reset tokens
         return "Dear user,\n\nPlease click the following link to reset your password." +
-                String.format("\nhttp://%s:%s/api/auth/reset-password?%s",
-                        env.getProperty("server.host"),
-                        env.getProperty("server.port"),
-                        jwtUtil.generateToken(email)) +
+                String.format(
+                        "\nhttp://%s:%s/reset-password/%s",
+                        env.getProperty("front.host"),
+                        env.getProperty("front.port"),
+                        jwtUtil.generateToken(email,
+                                env.getProperty("jwt.expiration.reset-password", Long.class))
+                ) +
                 "\nIf you did not request this, please ignore this email." +
                 "Sincerely,\n\nExchangeApp Team.";
     }
