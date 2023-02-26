@@ -12,7 +12,25 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+  mail:
+    host: smtp.office365.com
+    port: 587
+    username: nadir976@yandex.ru
+    password:
+    properties:
+      mail:
+        debug: true
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 jwt:
   secret: c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0Cg====
-  expiration: 7200000
+  expiration:
+    reset-password: 600000
+    default: 7200000
+
+front:
+  host: localhost
+  port: 3000
