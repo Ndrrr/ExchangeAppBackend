@@ -4,10 +4,15 @@ logging:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:54322/exchange
-    username: exchange
-    password: exchange
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: root
     driver-class-name: org.postgresql.Driver
+  #    url: jdbc:postgresql://localhost:54322/exchange
+#    username: exchange
+#    password: exchange
+#    driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
       ddl-auto: update

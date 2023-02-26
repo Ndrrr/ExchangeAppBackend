@@ -1,5 +1,7 @@
 package com.exchange.app.service;
 
+import com.exchange.app.domain.Token;
+import com.exchange.app.domain.TokenType;
 import com.exchange.app.domain.User;
 import com.exchange.app.dto.UserDto;
 import com.exchange.app.dto.request.ForgotPasswordRequest;
@@ -11,6 +13,7 @@ import com.exchange.app.error.BaseException;
 import com.exchange.app.error.ErrorCode;
 import com.exchange.app.error.UserNotFoundException;
 import com.exchange.app.mapper.UserMapper;
+import com.exchange.app.repository.TokenRepository;
 import com.exchange.app.repository.UserRepository;
 import com.exchange.app.util.JwtUtil;
 import jakarta.mail.MessagingException;
@@ -35,6 +38,7 @@ public class UserService {
     private final UserMapper userMapper;
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
+    private final TokenRepository tokenRepository;
     private final AuthenticationManager authenticationManager;
     private final JavaMailSender javaMailSender;
     private final Environment env;
@@ -54,7 +58,10 @@ public class UserService {
             throw BaseException.of(ErrorCode.INVALID_CREDENTIALS, "Incorrect email or password");
         }
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String token = jwtUtil.generateToken(authentication.getName());
+        var user = userRepository.findByEmail(loginRequest.getEmail()).orElseThrow();
+        String token = jwtUtil.generateToken(user);
+        revokeAllUserTokens(user);
+        saveUserToken(user, token);
         return LoginResponse.of(token);
     }
 
@@ -103,6 +110,27 @@ public class UserService {
                 ) +
                 "\nIf you did not request this, please ignore this email." +
                 "Sincerely,\n\nExchangeApp Team.";
+    }
+
+    private void saveUserToken(User user, String jwtToken) {
+        var token = Token.builder()
+                .user(user)
+                .token(jwtToken)
+                .tokenType(TokenType.BEARER)
+                .expired(false)
+                .revoked(false)
+                .build();
+        tokenRepository.save(token);
+    }
+
+    private void revokeAllUserTokens(User user) {
+        var validUserTokens = tokenRepository.findAllValidTokensByUser(user.getId());
+        if (validUserTokens.isEmpty()) return;
+        validUserTokens.forEach(t -> {
+            t.setRevoked(true);
+            t.setExpired(true);
+        });
+        tokenRepository.saveAll(validUserTokens);
     }
 
 }
