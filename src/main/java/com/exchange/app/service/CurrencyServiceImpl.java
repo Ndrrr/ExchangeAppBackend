@@ -101,8 +101,8 @@ public class CurrencyServiceImpl implements CurrencyService {
     public TimeSeriesResponse getRatesBasedOnDate(TimeSeriesRequest request) {
         String apiUrl = "%stimeseries?apikey=%s".formatted(API, API_KEY);
         String currencies = "&base=%s&symbols=%s&start_date=%s&end_date=%s"
-                .formatted(request.base(),
-                        request.symbol(),
+                .formatted(request.base().toUpperCase(),
+                        request.symbol().toUpperCase(),
                         request.start_date(),
                         request.end_date());
         String url = apiUrl + currencies;
