@@ -10,6 +10,7 @@ public enum ErrorCode {
     CURRENCY_NOT_FOUND,
 
     CURRENCY_CONVERTING_FAILED,
+    DATE_FAIL,
     EMAIL_SENDING_ERROR;
 
     public String code() {

@@ -2,6 +2,7 @@ package com.exchange.app.handler;
 
 import com.exchange.app.handler.errors.CurrencyConvertingException;
 import com.exchange.app.handler.errors.CurrencyNotFoundException;
+import com.exchange.app.handler.errors.DateException;
 import com.exchange.app.handler.errors.UserNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
@@ -43,6 +44,12 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(CurrencyConvertingException.class)
     public RestErrorResponse handleCurrencyNotFoundException(CurrencyConvertingException ex) {
+        return RestErrorResponse.of(ex.getCode(), ex.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(DateException.class)
+    public RestErrorResponse handleCurrencyNotFoundException(DateException ex) {
         return RestErrorResponse.of(ex.getCode(), ex.getMessage());
     }
 
