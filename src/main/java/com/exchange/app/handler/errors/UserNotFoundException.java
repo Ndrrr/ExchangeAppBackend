@@ -1,4 +1,6 @@
-package com.exchange.app.error;
+package com.exchange.app.handler.errors;
+
+import com.exchange.app.handler.BaseException;
 
 public class UserNotFoundException extends BaseException {
 
