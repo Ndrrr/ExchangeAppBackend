@@ -1,6 +1,6 @@
 package com.exchange.app.security;
 
-import com.exchange.app.error.UserNotFoundException;
+import com.exchange.app.handler.errors.UserNotFoundException;
 import com.exchange.app.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 
-import static com.exchange.app.error.ErrorCode.USER_NOT_FOUND;
+import static com.exchange.app.handler.ErrorCode.USER_NOT_FOUND;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
