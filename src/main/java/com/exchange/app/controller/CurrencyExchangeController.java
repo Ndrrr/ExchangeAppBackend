@@ -20,8 +20,9 @@ public class CurrencyExchangeController {
         return ResponseEntity.ok(currencyService.getLatestExchangeRatesOnBase(request));
     }
 
-    @GetMapping("/convert")
-    public ResponseEntity<CurrencyConvertingResponse> getConvertingResult(@RequestBody CurrencyConvertingRequest request) {
-        return ResponseEntity.ok(currencyService.getCurrencyConvertingResult(request));
+    @GetMapping("/{userId}/convert")
+    public ResponseEntity<CurrencyConvertingResponse> getConvertingResult(@PathVariable(name = "userId") Long userId,
+                                                                          @RequestBody CurrencyConvertingRequest request) {
+        return ResponseEntity.ok(currencyService.getCurrencyConvertingResult(userId, request));
     }
 }

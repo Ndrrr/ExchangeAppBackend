@@ -8,5 +8,5 @@ import com.exchange.app.dto.response.ExchangeRatesResponse;
 public interface CurrencyService {
     ExchangeRatesResponse getLatestExchangeRatesOnBase(ExchangeRatesRequest request);
 
-    CurrencyConvertingResponse getCurrencyConvertingResult(CurrencyConvertingRequest request);
+    CurrencyConvertingResponse getCurrencyConvertingResult(Long userId, CurrencyConvertingRequest request);
 }
