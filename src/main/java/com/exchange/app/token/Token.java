@@ -1,5 +1,6 @@
-package com.exchange.app.domain;
+package com.exchange.app.token;
 
+import com.exchange.app.domain.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
