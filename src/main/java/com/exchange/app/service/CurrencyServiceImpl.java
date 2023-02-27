@@ -3,6 +3,7 @@ package com.exchange.app.service;
 import com.exchange.app.domain.CurrencyConvert;
 import com.exchange.app.domain.User;
 import com.exchange.app.dto.request.CurrencyConvertingRequest;
+import com.exchange.app.dto.request.ExchangeRatesOnDateRequest;
 import com.exchange.app.dto.request.ExchangeRatesRequest;
 import com.exchange.app.dto.response.CurrencyConvertingResponse;
 import com.exchange.app.dto.response.ExchangeRatesResponse;
@@ -19,6 +20,9 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 @Service
 @RequiredArgsConstructor
 public class CurrencyServiceImpl implements CurrencyService {
@@ -31,9 +35,11 @@ public class CurrencyServiceImpl implements CurrencyService {
 
     @Override
     public ExchangeRatesResponse getLatestExchangeRatesOnBase(ExchangeRatesRequest request) {
-        String apiUrl = API + "latest?apikey=" + API_KEY;
-        String currencies = "&symbols=" + request.symbol().toUpperCase() +
-                "&base=" + request.base().toUpperCase();
+        String apiUrl = "%slatest?apikey=%s".formatted(API, API_KEY);
+        String currencies = "&symbols=%s&base=%s"
+                .formatted(request.symbol().toUpperCase(),
+                        request.base().toUpperCase());
+
         String url = apiUrl + currencies;
 
         ResponseEntity<ExchangeRatesResponse> responseEntity = template.getForEntity(url,
@@ -45,10 +51,12 @@ public class CurrencyServiceImpl implements CurrencyService {
 
     @Override
     public CurrencyConvertingResponse getCurrencyConvertingResult(Long userId, CurrencyConvertingRequest request) {
-        String apiUrl = API + "convert?apikey=" + API_KEY;
-        String currencies = "&to=" + request.to().toUpperCase() +
-                "&from=" + request.from().toUpperCase() +
-                "&amount=" + request.amount().toUpperCase();
+        String apiUrl = "%sconvert?apikey=%s".formatted(API, API_KEY);
+        String currencies = "&to=%s&from=%s&amount=%s"
+                .formatted(request.to().toUpperCase(),
+                        request.from().toUpperCase(),
+                        request.amount().toUpperCase());
+
         String url = apiUrl + currencies;
 
         ResponseEntity<CurrencyConvertingResponse> responseEntity = template.getForEntity(url,
@@ -64,6 +72,24 @@ public class CurrencyServiceImpl implements CurrencyService {
                 .result(responseEntity.getBody().result())
                 .build();
         currencyConvertRepository.save(cc);
+
+        return responseEntity.getBody();
+    }
+
+    @Override
+    public ExchangeRatesResponse getExchangeRatesOnDate(ExchangeRatesOnDateRequest request) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate date = LocalDate.parse(request.date(), formatter);
+        if (date.isAfter(LocalDate.now())) throw new RuntimeException("Date not properly provided");
+
+        String apiUrl = "%s%s?apikey=%s".formatted(API, request.date(), API_KEY);
+        String currencies = "&symbols=%s&base=%s"
+                .formatted(request.symbols().toUpperCase(),
+                        request.base().toUpperCase());
+        String url = apiUrl + currencies;
+        ResponseEntity<ExchangeRatesResponse> responseEntity = template.getForEntity(url,
+                ExchangeRatesResponse.class);
+
 
         return responseEntity.getBody();
     }
