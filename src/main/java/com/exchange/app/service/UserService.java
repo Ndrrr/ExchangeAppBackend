@@ -1,7 +1,7 @@
 package com.exchange.app.service;
 
-import com.exchange.app.domain.Token;
-import com.exchange.app.domain.TokenType;
+import com.exchange.app.token.Token;
+import com.exchange.app.token.TokenType;
 import com.exchange.app.domain.User;
 import com.exchange.app.dto.UserDto;
 import com.exchange.app.dto.request.ForgotPasswordRequest;
