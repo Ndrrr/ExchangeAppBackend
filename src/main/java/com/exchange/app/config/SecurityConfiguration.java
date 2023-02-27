@@ -49,8 +49,8 @@ public class SecurityConfiguration {
                 .and()
                 .cors();
         http.addFilterBefore(jwtFiler, UsernamePasswordAuthenticationFilter.class);
-        http.
-                logout()
+        http
+                .logout()
                 .logoutUrl("/api/auth/logout")
                 .addLogoutHandler(logoutHandler)
                 .logoutSuccessHandler(((request, response, authentication)
