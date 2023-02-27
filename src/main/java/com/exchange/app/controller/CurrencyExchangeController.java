@@ -1,9 +1,11 @@
 package com.exchange.app.controller;
 
 import com.exchange.app.dto.request.CurrencyConvertingRequest;
+import com.exchange.app.dto.request.ExchangeRateFluctuationRequest;
 import com.exchange.app.dto.request.ExchangeRatesOnDateRequest;
 import com.exchange.app.dto.request.ExchangeRatesRequest;
 import com.exchange.app.dto.response.CurrencyConvertingResponse;
+import com.exchange.app.dto.response.ExchangeRateFluctuationResponse;
 import com.exchange.app.dto.response.ExchangeRatesResponse;
 import com.exchange.app.service.CurrencyService;
 import lombok.RequiredArgsConstructor;
@@ -31,4 +33,12 @@ public class CurrencyExchangeController {
     public ResponseEntity<ExchangeRatesResponse> getExchangeRatesOnDate(@RequestBody ExchangeRatesOnDateRequest request) {
         return ResponseEntity.ok(currencyService.getExchangeRatesOnDate(request));
     }
+
+    @GetMapping("/fluctuation")
+    public ResponseEntity<ExchangeRateFluctuationResponse> getExchangeRateFluctuation(
+            @RequestBody ExchangeRateFluctuationRequest request
+    ) {
+        return ResponseEntity.ok(currencyService.getExchangeRateFluctuation(request));
+    }
+
 }

@@ -3,23 +3,26 @@ package com.exchange.app.service;
 import com.exchange.app.domain.CurrencyConvert;
 import com.exchange.app.domain.User;
 import com.exchange.app.dto.request.CurrencyConvertingRequest;
+import com.exchange.app.dto.request.ExchangeRateFluctuationRequest;
 import com.exchange.app.dto.request.ExchangeRatesOnDateRequest;
 import com.exchange.app.dto.request.ExchangeRatesRequest;
 import com.exchange.app.dto.response.CurrencyConvertingResponse;
+import com.exchange.app.dto.response.ExchangeRateFluctuationResponse;
 import com.exchange.app.dto.response.ExchangeRatesResponse;
 import com.exchange.app.handler.errors.CurrencyConvertingException;
 import com.exchange.app.handler.errors.CurrencyNotFoundException;
 import com.exchange.app.handler.ErrorCode;
+import com.exchange.app.handler.errors.DateException;
 import com.exchange.app.handler.errors.UserNotFoundException;
 import com.exchange.app.repository.CurrencyConvertRepository;
 import com.exchange.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -80,7 +83,8 @@ public class CurrencyServiceImpl implements CurrencyService {
     public ExchangeRatesResponse getExchangeRatesOnDate(ExchangeRatesOnDateRequest request) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate date = LocalDate.parse(request.date(), formatter);
-        if (date.isAfter(LocalDate.now())) throw new RuntimeException("Date not properly provided");
+        if (date.isAfter(LocalDate.now()))
+            throw new DateException(ErrorCode.DATE_FAIL.code(), "Date not properly provided");
 
         String apiUrl = "%s%s?apikey=%s".formatted(API, request.date(), API_KEY);
         String currencies = "&symbols=%s&base=%s"
@@ -90,6 +94,24 @@ public class CurrencyServiceImpl implements CurrencyService {
         ResponseEntity<ExchangeRatesResponse> responseEntity = template.getForEntity(url,
                 ExchangeRatesResponse.class);
 
+        return responseEntity.getBody();
+    }
+
+    @Override
+    public ExchangeRateFluctuationResponse getExchangeRateFluctuation(ExchangeRateFluctuationRequest request) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate sdate = LocalDate.parse(request.getStart_date(), formatter);
+        LocalDate edate = LocalDate.parse(request.getEnd_date(), formatter);
+        if (edate.isBefore(sdate)) throw new DateException(ErrorCode.DATE_FAIL.code(), "Date not correct");
+        String apiUrl = "%sfluctuation?apikey=%s".formatted(API, API_KEY);
+        String currencies = "&base=%s&start_date=%s&end_date=%s&symbols=%s"
+                .formatted(request.getBase().toUpperCase(),
+                        request.getStart_date(),
+                        request.getEnd_date(),
+                        request.getSymbol().toUpperCase());
+        String url = apiUrl + currencies;
+        ResponseEntity<ExchangeRateFluctuationResponse> responseEntity = template.getForEntity(url,
+                ExchangeRateFluctuationResponse.class);
 
         return responseEntity.getBody();
     }
