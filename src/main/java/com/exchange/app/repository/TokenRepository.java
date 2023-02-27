@@ -1,6 +1,6 @@
 package com.exchange.app.repository;
 
-import com.exchange.app.domain.Token;
+import com.exchange.app.token.Token;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
