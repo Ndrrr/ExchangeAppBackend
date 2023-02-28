@@ -79,10 +79,6 @@ public class CurrencyServiceImpl implements CurrencyService {
 
     @Override
     public ExchangeRateFluctuationResponse getExchangeRateFluctuation(ExchangeRateFluctuationRequest request) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        LocalDate sdate = LocalDate.parse(request.getStart_date(), formatter);
-        LocalDate edate = LocalDate.parse(request.getEnd_date(), formatter);
-        if (edate.isBefore(sdate)) throw new DateException(ErrorCode.DATE_FAIL.code(), "Date not correct");
         String apiUrl = "%sfluctuation?apikey=%s".formatted(API, API_KEY);
         String currencies = "&base=%s&start_date=%s&end_date=%s&symbols=%s"
                 .formatted(request.getBase().toUpperCase(),
@@ -99,6 +95,10 @@ public class CurrencyServiceImpl implements CurrencyService {
 
     @Override
     public TimeSeriesResponse getRatesBasedOnDate(TimeSeriesRequest request) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate sdate = LocalDate.parse(request.start_date(), formatter);
+        LocalDate edate = LocalDate.parse(request.end_date(), formatter);
+        if (edate.isBefore(sdate)) throw new DateException(ErrorCode.DATE_FAIL.code(), "Date not correct");
         String apiUrl = "%stimeseries?apikey=%s".formatted(API, API_KEY);
         String currencies = "&base=%s&symbols=%s&start_date=%s&end_date=%s"
                 .formatted(request.base(),
