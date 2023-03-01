@@ -1,15 +1,15 @@
 package com.exchange.app.dto.response;
 
+import com.exchange.app.dto.CurrencyDto;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 
+@Data
+@AllArgsConstructor(staticName = "of")
+public class CurrencyResponse {
 
-import java.util.Map;
+    private List<CurrencyDto> currencies;
 
-public record CurrencyResponse(
-
-        @JsonProperty("symbols")
-        Map<String, String> currencies
-
-) {
 }

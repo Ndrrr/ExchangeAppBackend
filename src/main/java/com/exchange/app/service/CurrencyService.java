@@ -1,21 +1,20 @@
 package com.exchange.app.service;
 
-import com.exchange.app.domain.Currency;
-import com.exchange.app.dto.request.*;
+import com.exchange.app.dto.request.CurrencyConvertingRequest;
+import com.exchange.app.dto.request.ExchangeRateFluctuationRequest;
+import com.exchange.app.dto.request.TimeSeriesRequest;
 import com.exchange.app.dto.response.*;
-
-import java.io.FileNotFoundException;
-import java.util.List;
 
 public interface CurrencyService {
 
-    ExchangeRatesResponse getLatestExchangeRatesOnBase(ExchangeRatesRequest request);
+    ExchangeRatesResponse getLatestExchangeRatesOnBase(String symbol, String base);
 
     CurrencyConvertingResponse getCurrencyConvertingResult(CurrencyConvertingRequest request);
 
     ExchangeRateFluctuationResponse getExchangeRateFluctuation(ExchangeRateFluctuationRequest request);
 
-    void loadCurrencies();
-
     TimeSeriesResponse getRatesBasedOnDate(TimeSeriesRequest request);
+
+    CurrencyResponse getAllCurrencies();
+
 }

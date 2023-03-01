@@ -9,9 +9,11 @@ import com.exchange.app.handler.errors.CurrencyNotFoundException;
 import com.exchange.app.handler.ErrorCode;
 import com.exchange.app.handler.errors.DateException;
 import com.exchange.app.handler.errors.UserNotFoundException;
+import com.exchange.app.mapper.CurrencyMapper;
 import com.exchange.app.repository.CurrencyConvertRepository;
 import com.exchange.app.repository.CurrencyRepository;
 import com.exchange.app.repository.UserRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
@@ -29,6 +31,7 @@ import java.util.*;
 public class CurrencyServiceImpl implements CurrencyService {
 
     private final RestTemplate template;
+    private final CurrencyMapper currencyMapper;
     private final UserRepository userRepository;
     private final CurrencyRepository currencyRepository;
     private final CurrencyConvertRepository currencyConvertRepository;
@@ -36,11 +39,11 @@ public class CurrencyServiceImpl implements CurrencyService {
     private static final String API_KEY = "pm77YUyZWXeXrgOC0rAP4jT6OCk148W4";
 
     @Override
-    public ExchangeRatesResponse getLatestExchangeRatesOnBase(ExchangeRatesRequest request) {
+    public ExchangeRatesResponse getLatestExchangeRatesOnBase(String symbol, String base) {
         String apiUrl = "%slatest?apikey=%s".formatted(API, API_KEY);
         String currencies = "&symbols=%s&base=%s"
-                .formatted(request.symbol().toUpperCase(),
-                        request.base().toUpperCase());
+                .formatted(symbol.toUpperCase(),
+                        base.toUpperCase());
 
         String url = apiUrl + currencies;
 
@@ -60,7 +63,7 @@ public class CurrencyServiceImpl implements CurrencyService {
                         request.amount().toUpperCase());
 
         String url = apiUrl + currencies;
-
+        log.info(url);
         ResponseEntity<CurrencyConvertingResponse> responseEntity = template.getForEntity(url,
                 CurrencyConvertingResponse.class);
         if (currencyChecking(responseEntity.getStatusCode()))
@@ -97,11 +100,11 @@ public class CurrencyServiceImpl implements CurrencyService {
         return responseEntity.getBody();
     }
 
-    @Override
+    @PostConstruct
     public void loadCurrencies() {
         if (currencyRepository.findAll().isEmpty()) {
-            log.debug("Currencies requested from api");
-            CurrencyResponse response = getDataFromAPI();
+            log.debug("All Currencies requested from api");
+            CurrencyMapResponse response = getDataFromAPI();
             Set<String> currencyCodes = response.currencies().keySet();
             List<Currency> currencies = currencyCodes.stream().map(key -> Currency.builder()
                     .code(key)
@@ -109,7 +112,7 @@ public class CurrencyServiceImpl implements CurrencyService {
                     .build()).toList();
             currencyRepository.saveAll(currencies);
         }
-        log.debug("Currencies in database");
+        log.debug("All Currencies loaded to database");
     }
 
     @Override
@@ -132,14 +135,20 @@ public class CurrencyServiceImpl implements CurrencyService {
         return responseEntity.getBody();
     }
 
+    @Override
+    public CurrencyResponse getAllCurrencies() {
+        var currencies = currencyRepository.findAll();
+        return CurrencyResponse.of(currencyMapper.toCurrencyDtoList(currencies));
+    }
+
     private boolean currencyChecking(HttpStatusCode status) {
         return !status.is2xxSuccessful();
     }
 
-    private CurrencyResponse getDataFromAPI() {
+    private CurrencyMapResponse getDataFromAPI() {
         String apiUrl = "%ssymbols?apikey=%s".formatted(API, API_KEY);
-        ResponseEntity<CurrencyResponse> responseEntity = template.getForEntity(apiUrl,
-                CurrencyResponse.class);
+        ResponseEntity<CurrencyMapResponse> responseEntity = template.getForEntity(apiUrl,
+                CurrencyMapResponse.class);
         return responseEntity.getBody();
     }
 

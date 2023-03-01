@@ -41,20 +41,19 @@ public class JwtUtil {
         return token;
     }
 
-    public String generateToken(String username) {
-        return generateToken(username, env.getProperty("jwt.expiration.default", Long.class));
-    }
-
     public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
+        Long expiration = env.getProperty("jwt.expiration.default", Long.class);
+        if(expiration == null)
+            expiration = 1000 * 60 * 24L;
+        return generateToken(userDetails, expiration, new HashMap<>());
     }
 
-    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+    public String generateToken(UserDetails userDetails, long expireDate, Map<String, Object> extraClaims) {
         return Jwts.builder()
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expireDate))
                 .signWith(getSingInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }

@@ -62,7 +62,7 @@ public class UserService {
         String token = jwtUtil.generateToken(user);
         revokeAllUserTokens(user);
         saveUserToken(user, token);
-        return LoginResponse.of(token);
+        return LoginResponse.of(token, user.getFullName());
     }
 
     public void forgotPassword(ForgotPasswordRequest request) {
@@ -86,7 +86,11 @@ public class UserService {
             throw BaseException.of(ErrorCode.INVALID_TOKEN, "Invalid token");
         }
         String email = jwtUtil.getUsernameFromJWT(token);
-        User user = userRepository.findByEmail(email).get();
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        if (optionalUser.isEmpty()) {
+            throw BaseException.of(ErrorCode.USER_NOT_FOUND, "User not found");
+        }
+        User user = optionalUser.get();
         user.setPassword(userMapper.encodePassword(request.getPassword()));
         userRepository.save(user);
     }
