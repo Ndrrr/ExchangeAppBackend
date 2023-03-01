@@ -1,6 +1,5 @@
 package com.exchange.app.controller;
 
-import com.exchange.app.domain.Currency;
 import com.exchange.app.dto.request.*;
 import com.exchange.app.dto.response.*;
 import com.exchange.app.service.CurrencyService;
@@ -8,14 +7,17 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.FileNotFoundException;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/exchange")
 public class CurrencyExchangeController {
     private final CurrencyService currencyService;
+
+    @GetMapping
+    public void loadCurrencies() {
+        currencyService.loadCurrencies();
+    }
 
     @GetMapping("/latest")
     public ResponseEntity<ExchangeRatesResponse> getLatestRates(@RequestBody ExchangeRatesRequest request) {

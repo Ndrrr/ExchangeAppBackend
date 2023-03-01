@@ -13,24 +13,19 @@ import com.exchange.app.repository.CurrencyConvertRepository;
 import com.exchange.app.repository.CurrencyRepository;
 import com.exchange.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CurrencyServiceImpl implements CurrencyService {
 
     private final RestTemplate template;
@@ -103,6 +98,21 @@ public class CurrencyServiceImpl implements CurrencyService {
     }
 
     @Override
+    public void loadCurrencies() {
+        if (currencyRepository.findAll().isEmpty()) {
+            log.debug("Currencies requested from api");
+            CurrencyResponse response = getDataFromAPI();
+            Set<String> currencyCodes = response.currencies().keySet();
+            List<Currency> currencies = currencyCodes.stream().map(key -> Currency.builder()
+                    .code(key)
+                    .name(response.currencies().get(key))
+                    .build()).toList();
+            currencyRepository.saveAll(currencies);
+        }
+        log.debug("Currencies in database");
+    }
+
+    @Override
     public TimeSeriesResponse getRatesBasedOnDate(TimeSeriesRequest request) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate sdate = LocalDate.parse(request.start_date(), formatter);
@@ -124,6 +134,13 @@ public class CurrencyServiceImpl implements CurrencyService {
 
     private boolean currencyChecking(HttpStatusCode status) {
         return !status.is2xxSuccessful();
+    }
+
+    private CurrencyResponse getDataFromAPI() {
+        String apiUrl = "%ssymbols?apikey=%s".formatted(API, API_KEY);
+        ResponseEntity<CurrencyResponse> responseEntity = template.getForEntity(apiUrl,
+                CurrencyResponse.class);
+        return responseEntity.getBody();
     }
 
 }

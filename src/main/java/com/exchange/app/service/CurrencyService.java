@@ -15,5 +15,7 @@ public interface CurrencyService {
 
     ExchangeRateFluctuationResponse getExchangeRateFluctuation(ExchangeRateFluctuationRequest request);
 
+    void loadCurrencies();
+
     TimeSeriesResponse getRatesBasedOnDate(TimeSeriesRequest request);
 }
