@@ -19,8 +19,8 @@ public class CurrencyExchangeController {
         currencyService.loadCurrencies();
     }
 
-    @GetMapping("/latest")
-    public ResponseEntity<ExchangeRatesResponse> getLatestRates(@RequestBody ExchangeRatesRequest request) {
+    @GetMapping("/rate")
+    public ResponseEntity<RateResponseDB> getLatestRates(@RequestBody RatesRequest request) {
         return ResponseEntity.ok(currencyService.getLatestExchangeRatesOnBase(request));
     }
 

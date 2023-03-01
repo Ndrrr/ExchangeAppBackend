@@ -17,6 +17,7 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+    generate-ddl: true
   mail:
     host: smtp.office365.com
     port: 587

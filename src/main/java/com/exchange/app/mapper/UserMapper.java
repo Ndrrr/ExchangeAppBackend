@@ -3,6 +3,7 @@ package com.exchange.app.mapper;
 import com.exchange.app.domain.User;
 import com.exchange.app.dto.UserDto;
 import com.exchange.app.dto.request.RegisterRequest;
+import lombok.RequiredArgsConstructor;
 import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

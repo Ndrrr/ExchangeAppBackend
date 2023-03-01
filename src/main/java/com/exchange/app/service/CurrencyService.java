@@ -1,15 +1,11 @@
 package com.exchange.app.service;
 
-import com.exchange.app.domain.Currency;
 import com.exchange.app.dto.request.*;
 import com.exchange.app.dto.response.*;
 
-import java.io.FileNotFoundException;
-import java.util.List;
-
 public interface CurrencyService {
 
-    ExchangeRatesResponse getLatestExchangeRatesOnBase(ExchangeRatesRequest request);
+    RateResponseDB getLatestExchangeRatesOnBase(RatesRequest request);
 
     CurrencyConvertingResponse getCurrencyConvertingResult(CurrencyConvertingRequest request);
 

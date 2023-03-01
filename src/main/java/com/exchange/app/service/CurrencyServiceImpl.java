@@ -2,6 +2,7 @@ package com.exchange.app.service;
 
 import com.exchange.app.domain.Currency;
 import com.exchange.app.domain.CurrencyConvert;
+import com.exchange.app.domain.Rates;
 import com.exchange.app.dto.request.*;
 import com.exchange.app.dto.response.*;
 import com.exchange.app.handler.errors.CurrencyConvertingException;
@@ -11,6 +12,7 @@ import com.exchange.app.handler.errors.DateException;
 import com.exchange.app.handler.errors.UserNotFoundException;
 import com.exchange.app.repository.CurrencyConvertRepository;
 import com.exchange.app.repository.CurrencyRepository;
+import com.exchange.app.repository.RatesRepository;
 import com.exchange.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,21 +33,50 @@ public class CurrencyServiceImpl implements CurrencyService {
     private final RestTemplate template;
     private final UserRepository userRepository;
     private final CurrencyRepository currencyRepository;
+    private final RatesRepository ratesRepository;
     private final CurrencyConvertRepository currencyConvertRepository;
     private static final String API = "https://api.apilayer.com/fixer/";
     private static final String API_KEY = "pm77YUyZWXeXrgOC0rAP4jT6OCk148W4";
 
     @Override
-    public ExchangeRatesResponse getLatestExchangeRatesOnBase(ExchangeRatesRequest request) {
+    public RateResponseDB getLatestExchangeRatesOnBase(RatesRequest request) {
+        Optional<Rates> rates = ratesRepository
+                .findRatesByFromAndTo(request.from(), request.to());
+
+        if (rates.isEmpty()) {
+            log.debug("RATES REQUESTED TO API");
+            RatesResponse ratesResponse = askRateToAPI(request);
+            Rates rts = saveRateToDb(request, ratesResponse);
+            return getRateResponseDB(rts);
+        }
+        return getRateResponseDB(rates.get());
+    }
+
+    private RateResponseDB getRateResponseDB(Rates rates) {
+        return RateResponseDB.builder()
+                .rate(rates.getRate())
+                .build();
+    }
+
+    private Rates saveRateToDb(RatesRequest request, RatesResponse ratesResponse) {
+        Rates r = Rates.builder()
+                .base(request.from())
+                .symbols(request.to())
+                .rate(ratesResponse.rates().get(request.to()))
+                .build();
+        log.debug("RATES SAVED TO DATABASE");
+        return ratesRepository.save(r);
+    }
+
+    private RatesResponse askRateToAPI(RatesRequest request) {
         String apiUrl = "%slatest?apikey=%s".formatted(API, API_KEY);
         String currencies = "&symbols=%s&base=%s"
-                .formatted(request.symbol().toUpperCase(),
-                        request.base().toUpperCase());
-
+                .formatted(request.to().toUpperCase(),
+                        request.from().toUpperCase());
         String url = apiUrl + currencies;
 
-        ResponseEntity<ExchangeRatesResponse> responseEntity = template.getForEntity(url,
-                ExchangeRatesResponse.class);
+        ResponseEntity<RatesResponse> responseEntity = template.getForEntity(url,
+                RatesResponse.class);
         if (currencyChecking(responseEntity.getStatusCode()))
             throw new CurrencyNotFoundException(ErrorCode.CURRENCY_NOT_FOUND.code(), "Such currency not exist");
         return responseEntity.getBody();
@@ -100,7 +131,7 @@ public class CurrencyServiceImpl implements CurrencyService {
     @Override
     public void loadCurrencies() {
         if (currencyRepository.findAll().isEmpty()) {
-            log.debug("Currencies requested from api");
+            log.debug("CURRENCIES REQUESTED FROM API");
             CurrencyResponse response = getDataFromAPI();
             Set<String> currencyCodes = response.currencies().keySet();
             List<Currency> currencies = currencyCodes.stream().map(key -> Currency.builder()
@@ -109,7 +140,7 @@ public class CurrencyServiceImpl implements CurrencyService {
                     .build()).toList();
             currencyRepository.saveAll(currencies);
         }
-        log.debug("Currencies in database");
+        log.debug("CURRENCIES ARE EXIST IN DATABASE");
     }
 
     @Override
