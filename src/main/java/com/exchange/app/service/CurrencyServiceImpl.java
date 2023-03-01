@@ -1,18 +1,16 @@
 package com.exchange.app.service;
 
+import com.exchange.app.domain.Currency;
 import com.exchange.app.domain.CurrencyConvert;
-import com.exchange.app.domain.User;
 import com.exchange.app.dto.request.*;
-import com.exchange.app.dto.response.CurrencyConvertingResponse;
-import com.exchange.app.dto.response.ExchangeRateFluctuationResponse;
-import com.exchange.app.dto.response.ExchangeRatesResponse;
-import com.exchange.app.dto.response.TimeSeriesResponse;
+import com.exchange.app.dto.response.*;
 import com.exchange.app.handler.errors.CurrencyConvertingException;
 import com.exchange.app.handler.errors.CurrencyNotFoundException;
 import com.exchange.app.handler.ErrorCode;
 import com.exchange.app.handler.errors.DateException;
 import com.exchange.app.handler.errors.UserNotFoundException;
 import com.exchange.app.repository.CurrencyConvertRepository;
+import com.exchange.app.repository.CurrencyRepository;
 import com.exchange.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatusCode;
@@ -20,9 +18,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.DateTimeException;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -30,9 +35,10 @@ public class CurrencyServiceImpl implements CurrencyService {
 
     private final RestTemplate template;
     private final UserRepository userRepository;
+    private final CurrencyRepository currencyRepository;
     private final CurrencyConvertRepository currencyConvertRepository;
     private static final String API = "https://api.apilayer.com/fixer/";
-    private static final String API_KEY = "qN6hQxrhUWeDWlOrsIthOc7rmH4fTrcI";
+    private static final String API_KEY = "pm77YUyZWXeXrgOC0rAP4jT6OCk148W4";
 
     @Override
     public ExchangeRatesResponse getLatestExchangeRatesOnBase(ExchangeRatesRequest request) {
@@ -51,7 +57,7 @@ public class CurrencyServiceImpl implements CurrencyService {
     }
 
     @Override
-    public CurrencyConvertingResponse getCurrencyConvertingResult(Long userId, CurrencyConvertingRequest request) {
+    public CurrencyConvertingResponse getCurrencyConvertingResult(CurrencyConvertingRequest request) {
         String apiUrl = "%sconvert?apikey=%s".formatted(API, API_KEY);
         String currencies = "&to=%s&from=%s&amount=%s"
                 .formatted(request.to().toUpperCase(),
@@ -65,7 +71,10 @@ public class CurrencyServiceImpl implements CurrencyService {
         if (currencyChecking(responseEntity.getStatusCode()))
             throw new CurrencyConvertingException(ErrorCode.CURRENCY_CONVERTING_FAILED.code(),
                     "Something went wrong on converting currencies");
-        var user = findUserById(userId);
+
+        var user = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND.code(),
+                        "User not found"));
 
         CurrencyConvert cc = CurrencyConvert.builder()
                 .user(user)
@@ -117,10 +126,4 @@ public class CurrencyServiceImpl implements CurrencyService {
         return !status.is2xxSuccessful();
     }
 
-    private User findUserById(Long id) {
-        var user = userRepository.findById(id);
-        if (user.isPresent()) return user.get();
-        throw new UserNotFoundException(ErrorCode.USER_NOT_FOUND.code(),
-                "User not found");
-    }
 }

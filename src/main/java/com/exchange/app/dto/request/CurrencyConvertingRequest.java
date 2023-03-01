@@ -5,6 +5,7 @@ import lombok.Builder;
 
 @Builder
 public record CurrencyConvertingRequest(
+        String email,
         @Min(3)
         String from,
         @Min(3)
