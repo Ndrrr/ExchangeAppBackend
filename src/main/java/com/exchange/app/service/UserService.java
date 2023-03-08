@@ -1,5 +1,7 @@
 package com.exchange.app.service;
 
+import com.exchange.app.token.Token;
+import com.exchange.app.token.TokenType;
 import com.exchange.app.domain.User;
 import com.exchange.app.dto.UserDto;
 import com.exchange.app.dto.request.ForgotPasswordRequest;
@@ -7,10 +9,11 @@ import com.exchange.app.dto.request.LoginRequest;
 import com.exchange.app.dto.request.RegisterRequest;
 import com.exchange.app.dto.request.ResetPasswordRequest;
 import com.exchange.app.dto.response.LoginResponse;
-import com.exchange.app.error.BaseException;
-import com.exchange.app.error.ErrorCode;
-import com.exchange.app.error.UserNotFoundException;
+import com.exchange.app.handler.BaseException;
+import com.exchange.app.handler.ErrorCode;
+import com.exchange.app.handler.errors.UserNotFoundException;
 import com.exchange.app.mapper.UserMapper;
+import com.exchange.app.repository.TokenRepository;
 import com.exchange.app.repository.UserRepository;
 import com.exchange.app.util.JwtUtil;
 import jakarta.mail.MessagingException;
@@ -35,6 +38,7 @@ public class UserService {
     private final UserMapper userMapper;
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
+    private final TokenRepository tokenRepository;
     private final AuthenticationManager authenticationManager;
     private final JavaMailSender javaMailSender;
     private final Environment env;
@@ -54,8 +58,11 @@ public class UserService {
             throw BaseException.of(ErrorCode.INVALID_CREDENTIALS, "Incorrect email or password");
         }
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String token = jwtUtil.generateToken(authentication.getName());
-        return LoginResponse.of(token);
+        var user = userRepository.findByEmail(loginRequest.getEmail()).orElseThrow();
+        String token = jwtUtil.generateToken(user);
+        revokeAllUserTokens(user);
+        saveUserToken(user, token);
+        return LoginResponse.of(token, user.getFullName());
     }
 
     public void forgotPassword(ForgotPasswordRequest request) {
@@ -79,7 +86,11 @@ public class UserService {
             throw BaseException.of(ErrorCode.INVALID_TOKEN, "Invalid token");
         }
         String email = jwtUtil.getUsernameFromJWT(token);
-        User user = userRepository.findByEmail(email).get();
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        if (optionalUser.isEmpty()) {
+            throw BaseException.of(ErrorCode.USER_NOT_FOUND, "User not found");
+        }
+        User user = optionalUser.get();
         user.setPassword(userMapper.encodePassword(request.getPassword()));
         userRepository.save(user);
     }
@@ -103,6 +114,27 @@ public class UserService {
                 ) +
                 "\nIf you did not request this, please ignore this email." +
                 "Sincerely,\n\nExchangeApp Team.";
+    }
+
+    private void saveUserToken(User user, String jwtToken) {
+        var token = Token.builder()
+                .user(user)
+                .token(jwtToken)
+                .tokenType(TokenType.BEARER)
+                .expired(false)
+                .revoked(false)
+                .build();
+        tokenRepository.save(token);
+    }
+
+    private void revokeAllUserTokens(User user) {
+        var validUserTokens = tokenRepository.findAllValidTokensByUser(user.getId());
+        if (validUserTokens.isEmpty()) return;
+        validUserTokens.forEach(t -> {
+            t.setRevoked(true);
+            t.setExpired(true);
+        });
+        tokenRepository.saveAll(validUserTokens);
     }
 
 }

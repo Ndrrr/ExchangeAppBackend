@@ -1,13 +1,15 @@
 package com.exchange.app.dto.response;
 
+import com.exchange.app.dto.CurrencyDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor(staticName = "of")
-public class LoginResponse {
+public class CurrencyResponse {
 
-    private String token;
-    private String fullName;
+    private List<CurrencyDto> currencies;
 
 }

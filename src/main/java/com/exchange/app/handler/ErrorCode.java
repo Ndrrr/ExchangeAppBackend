@@ -1,4 +1,4 @@
-package com.exchange.app.error;
+package com.exchange.app.handler;
 
 public enum ErrorCode {
 
@@ -7,6 +7,10 @@ public enum ErrorCode {
     USER_NOT_FOUND,
     USER_ALREADY_EXISTS,
     MANDATORY_FIELD_NOT_DEFINED,
+    CURRENCY_NOT_FOUND,
+
+    CURRENCY_CONVERTING_FAILED,
+    DATE_FAIL,
     EMAIL_SENDING_ERROR;
 
     public String code() {

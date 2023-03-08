@@ -1,13 +1,14 @@
 logging:
   level:
-    root: debug
+    root: info
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:54322/exchange
-    username: exchange
-    password: exchange
+    url: jdbc:postgresql://localhost:54322/postgres
+    username: postgres
+    password: postgres
     driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -15,7 +16,7 @@ spring:
   mail:
     host: smtp.office365.com
     port: 587
-    username: nadir976@yandex.ru
+    username:
     password:
     properties:
       mail:

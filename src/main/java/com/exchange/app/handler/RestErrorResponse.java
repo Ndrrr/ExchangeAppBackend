@@ -1,4 +1,4 @@
-package com.exchange.app.error;
+package com.exchange.app.handler;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;

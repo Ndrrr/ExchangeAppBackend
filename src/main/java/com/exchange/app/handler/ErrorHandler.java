@@ -1,5 +1,9 @@
-package com.exchange.app.error;
+package com.exchange.app.handler;
 
+import com.exchange.app.handler.errors.CurrencyConvertingException;
+import com.exchange.app.handler.errors.CurrencyNotFoundException;
+import com.exchange.app.handler.errors.DateException;
+import com.exchange.app.handler.errors.UserNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -31,6 +35,24 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
         return RestErrorResponse.of(ex.getCode(), ex.getMessage());
     }
 
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(CurrencyNotFoundException.class)
+    public RestErrorResponse handleCurrencyNotFoundException(CurrencyNotFoundException ex) {
+        return RestErrorResponse.of(ex.getCode(), ex.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(CurrencyConvertingException.class)
+    public RestErrorResponse handleCurrencyNotFoundException(CurrencyConvertingException ex) {
+        return RestErrorResponse.of(ex.getCode(), ex.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(DateException.class)
+    public RestErrorResponse handleCurrencyNotFoundException(DateException ex) {
+        return RestErrorResponse.of(ex.getCode(), ex.getMessage());
+    }
+
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(DataIntegrityViolationException.class)
     public RestErrorResponse handleDataIntegrityViolationException(
@@ -43,7 +65,7 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
             MethodArgumentNotValidException ex,
             HttpHeaders headers,
             HttpStatusCode status,
-            WebRequest request)  {
+            WebRequest request) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();

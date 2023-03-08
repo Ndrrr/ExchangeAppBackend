@@ -4,13 +4,19 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -35,9 +41,28 @@ public class JwtUtil {
         return token;
     }
 
-    public String generateToken(String username) {
-        return generateToken(username, env.getProperty("jwt.expiration.default", Long.class));
+    public String generateToken(UserDetails userDetails) {
+        Long expiration = env.getProperty("jwt.expiration.default", Long.class);
+        if(expiration == null)
+            expiration = 1000 * 60 * 24L;
+        return generateToken(userDetails, expiration, new HashMap<>());
     }
+
+    public String generateToken(UserDetails userDetails, long expireDate, Map<String, Object> extraClaims) {
+        return Jwts.builder()
+                .setClaims(extraClaims)
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expireDate))
+                .signWith(getSingInKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    private Key getSingInKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
 
     public String getUsernameFromJWT(String token) {
         Claims claims = Jwts.parser()
